@@ -214,75 +214,84 @@ class SecondBrainApp {
       .join("");
   }
 
-  openNoteModal(note = null) {
-    this.editingNoteId = note ? note.id : null;
-    const modal = document.getElementById("note-modal");
-    const title = document.getElementById("note-modal-title");
-    const form = document.getElementById("note-form");
+openNoteModal(note = null) {
+        this.editingNoteId = note ? note.id : null;
+        const modal = document.getElementById('note-modal');
+        const title = document.getElementById('note-modal-title');
+        const form = document.getElementById('note-form');
 
-    title.textContent = note ? "Edit Note" : "✨ New Note";
-    form.elements["note-title"].value = note ? note.title : "";
-    form.elements["note-content"].value = note ? note.content : "";
-    form.elements["note-category"].value = note ? note.category : "Idea";
+        title.textContent = note ? 'Edit Note' : '✨ New Note';
+        form.elements['note-title'].value = note ? note.title : '';
+        form.elements['note-content'].value = note ? note.content : '';
+        form.elements['note-category'].value = note ? note.category : 'Idea';
 
-    // ===== PERBAIKAN DROPDOWN DINAMIS SESUAI LOG =====
-const sessionSelect = document.getElementById('note-session') || document.getElementById('note-session-date');
-    if (sessionSelect) {
-      const sessions = storage.getSessions(); // Mengambil data session log asli
-      const todayStr = new Date().toISOString().split("T")[0];
-
-      // Inisialisasi Map untuk menyimpan relasi tanggal dan tulisan log/preview-nya
-      const sessionMap = new Map();
-
-      // Masukkan data dari session logs yang ada ke dalam Map
-      sessions.forEach((s) => {
-        // Ambil cuplikan teks "Apa yang dibangun hari ini" sebagai judul dropdown
-        const previewText = s.builtToday
-          ? s.builtToday.substring(0, 15)
-          : "No title";
-        sessionMap.set(s.date, previewText);
-      });
-
-      // Pastikan tanggal hari ini dan tanggal note yang sedang diedit masuk ke list pilihan
-      if (!sessionMap.has(todayStr)) {
-        sessionMap.set(todayStr, "Hari ini");
-      }
-      if (note) {
-        const noteDateStr = note.createdAt.split("T")[0];
-        if (!sessionMap.has(noteDateStr)) {
-          sessionMap.set(noteDateStr, "Log Note");
+        // ===== FIX DROPDOWN TANGGAL KOSONG =====
+        const sessionSelect = document.getElementById('note-session') || document.getElementById('note-session-date');
+        
+        if (sessionSelect) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const sessionMap = new Map();
+            
+            // 1. Ambil session dari storage secara aman
+            let sessions = [];
+            try {
+                if (typeof storage !== 'undefined' && typeof storage.getSessions === 'function') {
+                    sessions = storage.getSessions() || [];
+                }
+            } catch (err) {
+                console.error("Gagal mengambil session:", err);
+            }
+            
+            // 2. Masukkan session yang ada ke dalam Map
+            if (sessions.length > 0) {
+                sessions.forEach(s => {
+                    if (s && s.date) {
+                        // Ambil preview text dari builtToday, jika kosong beri nama 'Session Log'
+                        const previewText = s.builtToday && s.builtToday.trim() !== '' 
+                            ? s.builtToday.substring(0, 15) 
+                            : 'Session Log';
+                        sessionMap.set(s.date, previewText);
+                    }
+                });
+            }
+            
+            // 3. Cadangan: Pastikan tanggal hari ini SELALU ada di list pilihan
+            if (!sessionMap.has(todayStr)) {
+                sessionMap.set(todayStr, 'Hari ini');
+            }
+            
+            // 4. Cadangan: Jika sedang edit note, pastikan tanggal note tersebut juga muncul
+            if (note && note.createdAt) {
+                const noteDateStr = note.createdAt.split('T')[0];
+                if (!sessionMap.has(noteDateStr)) {
+                    sessionMap.set(noteDateStr, 'Log Note');
+                }
+            }
+            
+            // 5. Urutkan tanggal terbaru ke terlama
+            const sortedDates = Array.from(sessionMap.keys()).sort((a, b) => new Date(b) - new Date(a));
+            
+            // 6. Suntikkan HTML option ke dalam select secara dinamis
+            sessionSelect.innerHTML = sortedDates.map(date => {
+                const logTitle = sessionMap.get(date);
+                const formatted = this.formatDateShort ? this.formatDateShort(date) : date;
+                
+                let label = `📅 ${formatted} (${logTitle})`;
+                if (date === todayStr && logTitle === 'Hari ini') {
+                    label = `📅 Hari ini (${formatted})`;
+                }
+                
+                return `<option value="${date}">${label}</option>`;
+            }).join('');
+            
+            // 7. Pilih default valuenya
+            sessionSelect.value = note ? note.createdAt.split('T')[0] : todayStr;
         }
-      }
+        // =======================================
 
-      // Urutkan tanggal dari yang terbaru (descending)
-      const sortedDates = Array.from(sessionMap.keys()).sort(
-        (a, b) => new Date(b) - new Date(a),
-      );
-
-      // Render pilihan dropdown secara dinamis
-      sessionSelect.innerHTML = sortedDates
-        .map((date) => {
-          const logTitle = sessionMap.get(date);
-          const formatted = this.formatDateShort(date); // Format tanggal java (ex: 6 Jul)
-
-          // Menghasilkan teks seperti: "6 Jul (fasdas)"
-          const label =
-            date === todayStr && logTitle === "Hari ini"
-              ? `📅 Hari ini (${formatted})`
-              : `📅 ${formatted} (${logTitle}...)`;
-
-          return `<option value="${date}">${label}</option>`;
-        })
-        .join("");
-
-      // Set otomatis value dropdown ke tanggal note saat ini atau hari ini
-      sessionSelect.value = note ? note.createdAt.split("T")[0] : todayStr;
+        modal.classList.add('active');
+        setTimeout(() => form.elements['note-title'].focus(), 100);
     }
-    // ==================================================
-
-    modal.classList.add("active");
-    setTimeout(() => form.elements["note-title"].focus(), 100);
-  }
   async saveNote() {
     const sessionElement =
       document.getElementById("note-session") ||
