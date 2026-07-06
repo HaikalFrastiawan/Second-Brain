@@ -303,35 +303,49 @@ openNoteModal(note = null) {
             if (form.elements['note-title']) form.elements['note-title'].focus();
         }, 100);
     }
-  async saveNote() {
-    const sessionElement =
-      document.getElementById("note-session") ||
-      document.getElementById("note-session-date");
-    const data = {
-      title: form.elements["note-title"].value.trim(),
-      content: form.elements["note-content"].value.trim(),
-      category: form.elements["note-category"].value,
-      // Perbaiki baris di bawah ini dari 'note-session-date' ke 'note-session'
-      sessionDate: form.elements["note-session"]
-        ? form.elements["note-session"].value
-        : null,
-    };
 
-    if (!data.title) {
-      form.elements["note-title"].focus();
-      return;
+async saveNote() {
+        const form = document.getElementById('note-form');
+        if (!form) return;
+
+        // Ambil elemen secara langsung menggunakan ID (Jauh lebih aman dari crash)
+        const titleEl = document.getElementById('note-title');
+        const contentEl = document.getElementById('note-content');
+        const categoryEl = document.getElementById('note-category');
+        const sessionSelect = document.getElementById('note-session') || document.getElementById('note-session-date');
+
+        // Validasi pengaman: jika elemen tidak ditemukan, jangan biarkan script crash
+        const titleVal = titleEl ? titleEl.value.trim() : '';
+        const contentVal = contentEl ? contentEl.value.trim() : '';
+        const categoryVal = categoryEl ? categoryEl.value : 'Idea';
+        const sessionDateVal = sessionSelect ? sessionSelect.value : new Date().toISOString().split('T')[0];
+
+        if (!titleVal) {
+            if (titleEl) titleEl.focus();
+            return;
+        }
+
+        const data = {
+            title: titleVal,
+            content: contentVal,
+            category: categoryVal,
+            sessionDate: sessionDateVal
+        };
+
+        try {
+            if (this.editingNoteId) {
+                await storage.updateNote(this.editingNoteId, data);
+            } else {
+                await storage.addNote(data);
+            }
+
+            this.closeAllModals();
+            await this.loadNotes();
+            await this.updateStats();
+        } catch (err) {
+            console.error("Gagal menyimpan note:", err);
+        }
     }
-
-    if (this.editingNoteId) {
-      await storage.updateNote(this.editingNoteId, data);
-    } else {
-      await storage.addNote(data);
-    }
-
-    this.closeAllModals();
-    await this.loadNotes();
-    await this.updateStats();
-  }
 
   async editNote(id) {
     const note = await storage.getNote(id);
