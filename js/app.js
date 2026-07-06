@@ -220,19 +220,20 @@ openNoteModal(note = null) {
         const title = document.getElementById('note-modal-title');
         const form = document.getElementById('note-form');
 
+        if (!modal || !form) return;
+
         title.textContent = note ? 'Edit Note' : '✨ New Note';
         form.elements['note-title'].value = note ? note.title : '';
         form.elements['note-content'].value = note ? note.content : '';
         form.elements['note-category'].value = note ? note.category : 'Idea';
 
-        // ===== FIX DROPDOWN TANGGAL KOSONG =====
         const sessionSelect = document.getElementById('note-session') || document.getElementById('note-session-date');
         
         if (sessionSelect) {
             const todayStr = new Date().toISOString().split('T')[0];
             const sessionMap = new Map();
             
-            // 1. Ambil session dari storage secara aman
+            // 1. Ambil data session secara aman
             let sessions = [];
             try {
                 if (typeof storage !== 'undefined' && typeof storage.getSessions === 'function') {
@@ -242,11 +243,10 @@ openNoteModal(note = null) {
                 console.error("Gagal mengambil session:", err);
             }
             
-            // 2. Masukkan session yang ada ke dalam Map
-            if (sessions.length > 0) {
+            // 2. Masukkan ke dalam Map
+            if (sessions && sessions.length > 0) {
                 sessions.forEach(s => {
                     if (s && s.date) {
-                        // Ambil preview text dari builtToday, jika kosong beri nama 'Session Log'
                         const previewText = s.builtToday && s.builtToday.trim() !== '' 
                             ? s.builtToday.substring(0, 15) 
                             : 'Session Log';
@@ -255,12 +255,12 @@ openNoteModal(note = null) {
                 });
             }
             
-            // 3. Cadangan: Pastikan tanggal hari ini SELALU ada di list pilihan
+            // 3. Pastikan hari ini selalu ada
             if (!sessionMap.has(todayStr)) {
                 sessionMap.set(todayStr, 'Hari ini');
             }
             
-            // 4. Cadangan: Jika sedang edit note, pastikan tanggal note tersebut juga muncul
+            // 4. Pastikan tanggal catatan lama tetap masuk jika sedang edit
             if (note && note.createdAt) {
                 const noteDateStr = note.createdAt.split('T')[0];
                 if (!sessionMap.has(noteDateStr)) {
@@ -271,10 +271,20 @@ openNoteModal(note = null) {
             // 5. Urutkan tanggal terbaru ke terlama
             const sortedDates = Array.from(sessionMap.keys()).sort((a, b) => new Date(b) - new Date(a));
             
-            // 6. Suntikkan HTML option ke dalam select secara dinamis
+            // 6. Membuat fungsi format tanggal lokal sendiri agar tidak butuh objek luar/app
+            const safeFormatDateShort = (dateStr) => {
+                try {
+                    const d = new Date(dateStr + 'T00:00:00');
+                    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+                } catch {
+                    return dateStr;
+                }
+            };
+
+            // 7. Render ke innerHTML
             sessionSelect.innerHTML = sortedDates.map(date => {
                 const logTitle = sessionMap.get(date);
-                const formatted = this.formatDateShort ? this.formatDateShort(date) : date;
+                const formatted = safeFormatDateShort(date); // menggunakan fungsi mandiri di atas
                 
                 let label = `📅 ${formatted} (${logTitle})`;
                 if (date === todayStr && logTitle === 'Hari ini') {
@@ -284,13 +294,14 @@ openNoteModal(note = null) {
                 return `<option value="${date}">${label}</option>`;
             }).join('');
             
-            // 7. Pilih default valuenya
+            // 8. Berikan value bawaan
             sessionSelect.value = note ? note.createdAt.split('T')[0] : todayStr;
         }
-        // =======================================
 
         modal.classList.add('active');
-        setTimeout(() => form.elements['note-title'].focus(), 100);
+        setTimeout(() => {
+            if (form.elements['note-title']) form.elements['note-title'].focus();
+        }, 100);
     }
   async saveNote() {
     const sessionElement =
