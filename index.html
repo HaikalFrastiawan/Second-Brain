@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Second Brain — Your Digital Knowledge Hub</title>
-    <meta name="description" content="Second Brain - Capture ideas, track dev sessions, and visualize your knowledge as a growing brain.">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="description"
+        content="Second Brain - Capture ideas, track dev sessions, and visualize your knowledge as a growing brain.">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
     <!-- ===== Sidebar ===== -->
@@ -87,20 +92,22 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="note-title">Title</label>
-                        <input type="text" id="note-title" name="note-title" placeholder="What's on your mind?" required>
+                        <input type="text" id="note-title" name="note-title" placeholder="What's on your mind?"
+                            required>
                     </div>
                     <div class="form-group">
                         <label for="note-category">Category</label>
                         <select id="note-category" name="note-category">
-                            <option value="Idea">💡 Idea</option>
-                            <option value="Task">📌 Task</option>
-                            <option value="Reference">📖 Reference</option>
-                            <option value="Learning">🎓 Learning</option>
+                            <option value="Kuliah">🎓 Kuliah</option>
+                            <option value="Kerja">💼 Kerja</option>
+                            <option value="Belajar">📖 Belajar</option>
+                            <option value="Gym">🏋️‍♂️ Gym</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="note-content">Content</label>
-                        <textarea id="note-content" name="note-content" rows="5" placeholder="Write your thoughts here..."></textarea>
+                        <textarea id="note-content" name="note-content" rows="5"
+                            placeholder="Write your thoughts here..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -127,19 +134,23 @@
                     </div>
                     <div class="form-group">
                         <label for="session-built">1. Apa yang dibangun hari ini</label>
-                        <textarea id="session-built" name="session-built" rows="3" placeholder="- List konkret yang dikerjakan/dibuat/diperbaiki"></textarea>
+                        <textarea id="session-built" name="session-built" rows="3"
+                            placeholder="- List konkret yang dikerjakan/dibuat/diperbaiki"></textarea>
                     </div>
                     <div class="form-group">
                         <label for="session-problems">2. Masalah yang muncul</label>
-                        <textarea id="session-problems" name="session-problems" rows="3" placeholder="- Bug, error, atau blocker yang ketemu&#10;- Status: solved / masih open"></textarea>
+                        <textarea id="session-problems" name="session-problems" rows="3"
+                            placeholder="- Bug, error, atau blocker yang ketemu&#10;- Status: solved / masih open"></textarea>
                     </div>
                     <div class="form-group">
                         <label for="session-learned">3. Yang gw pelajari</label>
-                        <textarea id="session-learned" name="session-learned" rows="3" placeholder="- Insight atau lesson dari sesi ini&#10;- Keputusan penting yang diambil"></textarea>
+                        <textarea id="session-learned" name="session-learned" rows="3"
+                            placeholder="- Insight atau lesson dari sesi ini&#10;- Keputusan penting yang diambil"></textarea>
                     </div>
                     <div class="form-group">
                         <label for="session-focus">4. Fokus besok</label>
-                        <textarea id="session-focus" name="session-focus" rows="3" placeholder="- 1-3 hal prioritas untuk sesi berikutnya"></textarea>
+                        <textarea id="session-focus" name="session-focus" rows="3"
+                            placeholder="- 1-3 hal prioritas untuk sesi berikutnya"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -209,4 +220,5 @@
     <script src="js/brain.js"></script>
     <script src="js/app.js"></script>
 </body>
+
 </html>
