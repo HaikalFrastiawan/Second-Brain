@@ -1,224 +1,307 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Second Brain — Your Digital Knowledge Hub</title>
-    <meta name="description"
-        content="Second Brain - Capture ideas, track dev sessions, and visualize your knowledge as a growing brain.">
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-</head>
+    <meta
+      name="description"
+      content="Second Brain - Capture ideas, track dev sessions, and visualize your knowledge as a growing brain."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
 
-<body>
-
+  <body>
     <!-- ===== Sidebar ===== -->
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h2><span class="icon">🧠</span> Session Logs</h2>
-            <button id="add-session-btn" title="Add Session Log">+</button>
-        </div>
-        <div class="sidebar-search">
-            <input type="text" id="session-search" placeholder="🔍  Search sessions...">
-        </div>
-        <div class="session-list" id="session-list">
-            <!-- Session items rendered by JS -->
-        </div>
+      <div class="sidebar-header">
+        <h2><span class="icon">🧠</span> Session Logs</h2>
+        <button id="add-session-btn" title="Add Session Log">+</button>
+      </div>
+      <div class="sidebar-search">
+        <input
+          type="text"
+          id="session-search"
+          placeholder="🔍  Search sessions..."
+        />
+      </div>
+      <div class="session-list" id="session-list">
+        <!-- Session items rendered by JS -->
+      </div>
     </aside>
 
     <!-- ===== Mobile Sidebar Toggle ===== -->
-    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar">☰</button>
+    <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle Sidebar">
+      ☰
+    </button>
 
     <!-- ===== Main Content ===== -->
     <main class="main-content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <h1>⚡ Second Brain</h1>
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-number" id="total-notes">0</span>
+            <span class="stat-label">Notes</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number" id="total-sessions">0</span>
+            <span class="stat-label">Sessions</span>
+          </div>
+        </div>
+        <button id="add-note-btn" class="btn-primary">+ Add Note</button>
+        <button id="connect-folder-btn" class="btn-secondary">
+          📁 Connect Folder
+        </button>
+      </header>
 
-        <!-- Top Bar -->
-        <header class="top-bar">
-            <h1>⚡ Second Brain</h1>
-            <div class="stats">
-                <div class="stat-item">
-                    <span class="stat-number" id="total-notes">0</span>
-                    <span class="stat-label">Notes</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="total-sessions">0</span>
-                    <span class="stat-label">Sessions</span>
-                </div>
-            </div>
-            <button id="add-note-btn" class="btn-primary">+ Add Note</button>
-        </header>
+      <!-- Brain Visualization -->
+      <section class="brain-section">
+        <div class="brain-container">
+          <canvas id="brain-canvas"></canvas>
+          <div class="brain-info">
+            <p>
+              Each dot represents a thought in your brain • Hover to explore •
+              Click to view
+            </p>
+          </div>
+        </div>
+        <div class="brain-legend">
+          <div class="legend-item">
+            <span class="legend-dot idea"></span> Kuliah
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot task"></span> Kerja
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot reference"></span> Belajar
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot learning"></span> Gym
+          </div>
+        </div>
+      </section>
 
-        <!-- Brain Visualization -->
-        <section class="brain-section">
-            <div class="brain-container">
-                <canvas id="brain-canvas"></canvas>
-                <div class="brain-info">
-                    <p>Each dot represents a thought in your brain • Hover to explore • Click to view</p>
-                </div>
-            </div>
-            <div class="brain-legend">
-                <div class="legend-item"><span class="legend-dot idea"></span> Idea</div>
-                <div class="legend-item"><span class="legend-dot task"></span> Task</div>
-                <div class="legend-item"><span class="legend-dot reference"></span> Reference</div>
-                <div class="legend-item"><span class="legend-dot learning"></span> Learning</div>
-            </div>
-        </section>
-
-        <!-- Recent Notes -->
-        <section class="recent-section">
-            <div class="section-header">
-                <h3>📝 Recent Notes</h3>
-            </div>
-            <div class="notes-grid" id="notes-grid">
-                <!-- Note cards rendered by JS -->
-            </div>
-        </section>
-
+      <!-- Recent Notes -->
+      <section class="recent-section">
+        <div class="section-header">
+          <h3>📝 Recent Notes</h3>
+        </div>
+        <div class="notes-grid" id="notes-grid">
+          <!-- Note cards rendered by JS -->
+        </div>
+      </section>
     </main>
 
     <!-- ===== MODAL: Add/Edit Note ===== -->
     <div class="modal" id="note-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="note-modal-title">✨ New Note</h3>
-                <button class="modal-close" title="Close">✕</button>
-            </div>
-            <form id="note-form">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="note-title">Title</label>
-                        <input type="text" id="note-title" name="note-title" placeholder="What's on your mind?"
-                            required>
-                    </div>
-                    <div class="form-group">
-                        <label for="note-category">Category</label>
-                        <select id="note-category" name="note-category">
-                            <option value="Kuliah">🎓 Kuliah</option>
-                            <option value="Kerja">💼 Kerja</option>
-                            <option value="Belajar">📖 Belajar</option>
-                            <option value="Gym">🏋️‍♂️ Gym</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="note-content">Content</label>
-                        <textarea id="note-content" name="note-content" rows="5"
-                            placeholder="Write your thoughts here..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary" id="note-cancel-btn">Cancel</button>
-                    <button type="submit" class="btn-primary">💾 Save Note</button>
-                </div>
-            </form>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="note-modal-title">✨ New Note</h3>
+          <button class="modal-close" title="Close">✕</button>
         </div>
+        <form id="note-form">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="note-title">Title</label>
+              <input
+                type="text"
+                id="note-title"
+                name="note-title"
+                placeholder="What's on your mind?"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="note-category" placeholder="🎓 Kuliah"
+                >Category</label
+              >
+              <select
+                id="note-category"
+                name="note-category"
+                placeholder="🎓 Kuliah"
+              >
+                <option value="Kuliah">🎓 Kuliah</option>
+                <option value="Kerja">💼 Kerja</option>
+                <option value="Belajar">📖 Belajar</option>
+                <option value="Gym">🏋️‍♂️ Gym</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="note-session">Session Date</label>
+              <select id="note-session" name="note-session" required>
+                <option value="" disabled selected>
+                  Select session date...
+                </option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="note-content">Content</label>
+              <textarea
+                id="note-content"
+                name="note-content"
+                rows="5"
+                placeholder="Write your thoughts here..."
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="note-cancel-btn">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">💾 Save Note</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- ===== MODAL: Add/Edit Session ===== -->
     <div class="modal" id="session-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="session-modal-title">📋 New Session Log</h3>
-                <button class="modal-close" title="Close">✕</button>
-            </div>
-            <form id="session-form">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="session-date">Tanggal</label>
-                        <input type="date" id="session-date" name="session-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="session-built">1. Apa yang dibangun hari ini</label>
-                        <textarea id="session-built" name="session-built" rows="3"
-                            placeholder="- List konkret yang dikerjakan/dibuat/diperbaiki"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="session-problems">2. Masalah yang muncul</label>
-                        <textarea id="session-problems" name="session-problems" rows="3"
-                            placeholder="- Bug, error, atau blocker yang ketemu&#10;- Status: solved / masih open"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="session-learned">3. Yang gw pelajari</label>
-                        <textarea id="session-learned" name="session-learned" rows="3"
-                            placeholder="- Insight atau lesson dari sesi ini&#10;- Keputusan penting yang diambil"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="session-focus">4. Fokus besok</label>
-                        <textarea id="session-focus" name="session-focus" rows="3"
-                            placeholder="- 1-3 hal prioritas untuk sesi berikutnya"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary" id="session-cancel-btn">Cancel</button>
-                    <button type="submit" class="btn-primary">💾 Save Session</button>
-                </div>
-            </form>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="session-modal-title">📋 New Session Log</h3>
+          <button class="modal-close" title="Close">✕</button>
         </div>
+        <form id="session-form">
+          <div class="modal-body">
+            <div class="form-group">
+              <label for="session-date">Tanggal</label>
+              <input
+                type="date"
+                id="session-date"
+                name="session-date"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label for="session-built">1. Apa yang dibangun hari ini</label>
+              <textarea
+                id="session-built"
+                name="session-built"
+                rows="3"
+                placeholder="- List konkret yang dikerjakan/dibuat/diperbaiki"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="session-problems">2. Masalah yang muncul</label>
+              <textarea
+                id="session-problems"
+                name="session-problems"
+                rows="3"
+                placeholder="- Bug, error, atau blocker yang ketemu&#10;- Status: solved / masih open"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="session-learned">3. Yang gw pelajari</label>
+              <textarea
+                id="session-learned"
+                name="session-learned"
+                rows="3"
+                placeholder="- Insight atau lesson dari sesi ini&#10;- Keputusan penting yang diambil"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <label for="session-focus">4. Fokus besok</label>
+              <textarea
+                id="session-focus"
+                name="session-focus"
+                rows="3"
+                placeholder="- 1-3 hal prioritas untuk sesi berikutnya"
+              ></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-secondary" id="session-cancel-btn">
+              Cancel
+            </button>
+            <button type="submit" class="btn-primary">💾 Save Session</button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- ===== MODAL: View Session Detail ===== -->
     <div class="modal" id="view-session-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="view-session-date">📅 Session</h3>
-                <button class="modal-close" title="Close">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="session-detail-section">
-                    <h4><span class="num">1</span> Apa yang dibangun hari ini</h4>
-                    <div class="session-detail-content" id="view-session-built"></div>
-                </div>
-                <div class="session-detail-section">
-                    <h4><span class="num">2</span> Masalah yang muncul</h4>
-                    <div class="session-detail-content" id="view-session-problems"></div>
-                </div>
-                <div class="session-detail-section">
-                    <h4><span class="num">3</span> Yang gw pelajari</h4>
-                    <div class="session-detail-content" id="view-session-learned"></div>
-                </div>
-                <div class="session-detail-section">
-                    <h4><span class="num">4</span> Fokus besok</h4>
-                    <div class="session-detail-content" id="view-session-focus"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-export" id="export-session-btn">📥 Export .md</button>
-                <button type="button" class="btn-secondary" id="edit-from-view-btn">✏️ Edit</button>
-            </div>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="view-session-date">📅 Session</h3>
+          <button class="modal-close" title="Close">✕</button>
         </div>
+        <div class="modal-body">
+          <div class="session-detail-section">
+            <h4><span class="num">1</span> Apa yang dibangun hari ini</h4>
+            <div class="session-detail-content" id="view-session-built"></div>
+          </div>
+          <div class="session-detail-section">
+            <h4><span class="num">2</span> Masalah yang muncul</h4>
+            <div
+              class="session-detail-content"
+              id="view-session-problems"
+            ></div>
+          </div>
+          <div class="session-detail-section">
+            <h4><span class="num">3</span> Yang gw pelajari</h4>
+            <div class="session-detail-content" id="view-session-learned"></div>
+          </div>
+          <div class="session-detail-section">
+            <h4><span class="num">4</span> Fokus besok</h4>
+            <div class="session-detail-content" id="view-session-focus"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-export" id="export-session-btn">
+            📥 Export .md
+          </button>
+          <button type="button" class="btn-secondary" id="edit-from-view-btn">
+            ✏️ Edit
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- ===== MODAL: View Note Detail ===== -->
     <div class="modal" id="view-note-modal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="view-note-title">Note</h3>
-                <button class="modal-close" title="Close">✕</button>
-            </div>
-            <div class="modal-body">
-                <div class="view-note-header">
-                    <span class="note-category" id="view-note-category"></span>
-                </div>
-                <div class="view-note-body" id="view-note-content"></div>
-                <div class="view-note-meta" id="view-note-date"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" id="edit-note-from-view-btn">✏️ Edit</button>
-            </div>
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="view-note-title">Note</h3>
+          <button class="modal-close" title="Close">✕</button>
         </div>
+        <div class="modal-body">
+          <div class="view-note-header">
+            <span class="note-category" id="view-note-category"></span>
+          </div>
+          <div class="view-note-body" id="view-note-content"></div>
+          <div class="view-note-meta" id="view-note-date"></div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-secondary"
+            id="edit-note-from-view-btn"
+          >
+            ✏️ Edit
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Scripts (order matters) -->
     <script src="js/storage.js"></script>
     <script src="js/brain.js"></script>
     <script src="js/app.js"></script>
-</body>
-
+  </body>
 </html>

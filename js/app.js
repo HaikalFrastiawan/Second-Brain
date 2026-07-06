@@ -13,21 +13,80 @@ class SecondBrainApp {
         this.init();
     }
 
-    init() {
+    async init() {
         // Initialize brain visualizer
         this.brain = new BrainVisualizer('brain-canvas');
         this.brain.onParticleClick = (noteId) => this.viewNote(noteId);
 
+        // Load folder handle from storage (IndexedDB)
+        if (storage.isFileSystemSupported()) {
+            const hasStoredHandle = await storage.loadDirectoryHandle();
+            if (hasStoredHandle) {
+                // Try to verify permission (without prompting if already granted)
+                const hasPermission = await storage.verifyPermission(false);
+                this.updateFolderButtonState(hasPermission);
+            } else {
+                this.updateFolderButtonState(false);
+            }
+        } else {
+            // Hide the connect folder button if API is not supported by the browser
+            const btn = document.getElementById('connect-folder-btn');
+            if (btn) btn.style.display = 'none';
+        }
+
         // Load data
-        this.loadNotes();
+        await this.loadNotes();
         this.loadSessions();
-        this.updateStats();
+        await this.updateStats();
 
         // Setup event listeners
         this.setupEventListeners();
     }
 
+    updateFolderButtonState(connected) {
+        const btn = document.getElementById('connect-folder-btn');
+        if (!btn) return;
+        if (connected) {
+            btn.textContent = '📁 Connected: log/';
+            btn.classList.remove('btn-secondary');
+            btn.style.background = 'rgba(34, 197, 94, 0.1)';
+            btn.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+            btn.style.color = '#22c55e';
+            btn.title = 'Click to disconnect folder';
+        } else {
+            btn.textContent = '📁 Connect Folder';
+            btn.style.background = '';
+            btn.style.borderColor = '';
+            btn.style.color = '';
+            btn.classList.add('btn-secondary');
+            btn.title = 'Connect local folder for md storage';
+        }
+    }
+
     setupEventListeners() {
+        // Connect/Disconnect folder
+        const connectBtn = document.getElementById('connect-folder-btn');
+        if (connectBtn) {
+            connectBtn.addEventListener('click', async () => {
+                if (storage.directoryHandle) {
+                    if (confirm('Disconnect folder and switch back to LocalStorage?')) {
+                        await storage.disconnectDirectory();
+                        this.updateFolderButtonState(false);
+                        await this.loadNotes();
+                        await this.updateStats();
+                    }
+                } else {
+                    const success = await storage.selectDirectory();
+                    if (success) {
+                        const hasPermission = await storage.verifyPermission(true);
+                        this.updateFolderButtonState(hasPermission);
+                        await this.loadNotes();
+                        await this.updateStats();
+                    }
+                }
+            });
+        }
+
         // Add Note
         document.getElementById('add-note-btn').addEventListener('click', () => this.openNoteModal());
 
@@ -35,15 +94,15 @@ class SecondBrainApp {
         document.getElementById('add-session-btn').addEventListener('click', () => this.openSessionModal());
 
         // Note form
-        document.getElementById('note-form').addEventListener('submit', (e) => {
+        document.getElementById('note-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            this.saveNote();
+            await this.saveNote();
         });
 
         // Session form
-        document.getElementById('session-form').addEventListener('submit', (e) => {
+        document.getElementById('session-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            this.saveSession();
+            await this.saveSession();
         });
 
         // Modal close buttons
@@ -97,8 +156,8 @@ class SecondBrainApp {
 
     // ===== NOTES =====
 
-    loadNotes() {
-        const notes = storage.getNotes();
+    async loadNotes() {
+        const notes = await storage.getNotes();
         this.brain.syncWithNotes(notes);
         this.renderNotesGrid(notes);
     }
@@ -134,7 +193,7 @@ class SecondBrainApp {
         `).join('');
     }
 
-    openNoteModal(note = null) {
+   openNoteModal(note = null) {
         this.editingNoteId = note ? note.id : null;
         const modal = document.getElementById('note-modal');
         const title = document.getElementById('note-modal-title');
@@ -145,16 +204,71 @@ class SecondBrainApp {
         form.elements['note-content'].value = note ? note.content : '';
         form.elements['note-category'].value = note ? note.category : 'Idea';
 
+        // ===== PERBAIKAN DROPDOWN DINAMIS SESUAI LOG =====
+        const sessionSelect = document.getElementById('note-session');
+        if (sessionSelect) {
+            const sessions = storage.getSessions(); // Mengambil data session log asli
+            const todayStr = new Date().toISOString().split('T')[0];
+            
+            // Inisialisasi Map untuk menyimpan relasi tanggal dan tulisan log/preview-nya
+            const sessionMap = new Map();
+            
+            // Masukkan data dari session logs yang ada ke dalam Map
+            sessions.forEach(s => {
+                // Ambil cuplikan teks "Apa yang dibangun hari ini" sebagai judul dropdown
+                const previewText = s.builtToday ? s.builtToday.substring(0, 15) : 'No title';
+                sessionMap.set(s.date, previewText);
+            });
+            
+            // Pastikan tanggal hari ini dan tanggal note yang sedang diedit masuk ke list pilihan
+            if (!sessionMap.has(todayStr)) {
+                sessionMap.set(todayStr, 'Hari ini');
+            }
+            if (note) {
+                const noteDateStr = note.createdAt.split('T')[0];
+                if (!sessionMap.has(noteDateStr)) {
+                    sessionMap.set(noteDateStr, 'Log Note');
+                }
+            }
+            
+            // Urutkan tanggal dari yang terbaru (descending)
+            const sortedDates = Array.from(sessionMap.keys()).sort((a, b) => new Date(b) - new Date(a));
+            
+            // Render pilihan dropdown secara dinamis
+            sessionSelect.innerHTML = sortedDates.map(date => {
+                const logTitle = sessionMap.get(date);
+                const formatted = this.formatDateShort(date); // Format tanggal java (ex: 6 Jul)
+                
+                // Menghasilkan teks seperti: "6 Jul (fasdas)"
+                const label = date === todayStr && logTitle === 'Hari ini' 
+                    ? `📅 Hari ini (${formatted})` 
+                    : `📅 ${formatted} (${logTitle}...)`;
+                    
+                return `<option value="${date}">${label}</option>`;
+            }).join('');
+            
+            // Set otomatis value dropdown ke tanggal note saat ini atau hari ini
+            sessionSelect.value = note ? note.createdAt.split('T')[0] : todayStr;
+        }
+        // ==================================================
+
         modal.classList.add('active');
         setTimeout(() => form.elements['note-title'].focus(), 100);
-    }
-
-    saveNote() {
+    }    
+    async saveNote() {
+        // const form = document.getElementById('note-form');
+        // const data = {
+        //     title: form.elements['note-title'].value.trim(),
+        //     content: form.elements['note-content'].value.trim(),
+        //     category: form.elements['note-category'].value,
+        //     sessionDate: form.elements['note-session-date'] ? form.elements['note-session-date'].value : null
         const form = document.getElementById('note-form');
         const data = {
             title: form.elements['note-title'].value.trim(),
             content: form.elements['note-content'].value.trim(),
-            category: form.elements['note-category'].value
+            category: form.elements['note-category'].value,
+            // Perbaiki baris di bawah ini dari 'note-session-date' ke 'note-session'
+            sessionDate: form.elements['note-session'] ? form.elements['note-session'].value : null
         };
 
         if (!data.title) {
@@ -163,23 +277,23 @@ class SecondBrainApp {
         }
 
         if (this.editingNoteId) {
-            storage.updateNote(this.editingNoteId, data);
+            await storage.updateNote(this.editingNoteId, data);
         } else {
-            storage.addNote(data);
+            await storage.addNote(data);
         }
 
         this.closeAllModals();
-        this.loadNotes();
-        this.updateStats();
+        await this.loadNotes();
+        await this.updateStats();
     }
 
-    editNote(id) {
-        const note = storage.getNote(id);
+    async editNote(id) {
+        const note = await storage.getNote(id);
         if (note) this.openNoteModal(note);
     }
 
-    viewNote(id) {
-        const note = storage.getNote(id);
+    async viewNote(id) {
+        const note = await storage.getNote(id);
         if (!note) return;
 
         const modal = document.getElementById('view-note-modal');
@@ -191,19 +305,19 @@ class SecondBrainApp {
         document.getElementById('view-note-date').textContent = `Created: ${this.formatDate(note.createdAt)}`;
 
         // Setup edit button
-        document.getElementById('edit-note-from-view-btn').onclick = () => {
+        document.getElementById('edit-note-from-view-btn').onclick = async () => {
             this.closeAllModals();
-            this.editNote(id);
+            await this.editNote(id);
         };
 
         modal.classList.add('active');
     }
 
-    deleteNote(id) {
+    async deleteNote(id) {
         if (confirm('Hapus note ini?')) {
-            storage.deleteNote(id);
-            this.loadNotes();
-            this.updateStats();
+            await storage.deleteNote(id);
+            await this.loadNotes();
+            await this.updateStats();
         }
     }
 
@@ -258,7 +372,7 @@ class SecondBrainApp {
         setTimeout(() => form.elements['session-built'].focus(), 100);
     }
 
-    saveSession() {
+    async saveSession() {
         const form = document.getElementById('session-form');
         const data = {
             date: form.elements['session-date'].value,
@@ -269,14 +383,14 @@ class SecondBrainApp {
         };
 
         if (this.editingSessionId) {
-            storage.updateSession(this.editingSessionId, data);
+            await storage.updateSession(this.editingSessionId, data);
         } else {
-            storage.addSession(data);
+            await storage.addSession(data);
         }
 
         this.closeAllModals();
         this.loadSessions();
-        this.updateStats();
+        await this.updateStats();
     }
 
     editSession(id) {
@@ -299,11 +413,11 @@ class SecondBrainApp {
         modal.classList.add('active');
     }
 
-    deleteSession(id) {
+    async deleteSession(id) {
         if (confirm('Hapus session log ini?')) {
-            storage.deleteSession(id);
+            await storage.deleteSession(id);
             this.loadSessions();
-            this.updateStats();
+            await this.updateStats();
         }
     }
 
@@ -340,8 +454,8 @@ class SecondBrainApp {
 
     // ===== UI HELPERS =====
 
-    updateStats() {
-        document.getElementById('total-notes').textContent = storage.getNotesCount();
+    async updateStats() {
+        document.getElementById('total-notes').textContent = await storage.getNotesCount();
         document.getElementById('total-sessions').textContent = storage.getSessionsCount();
     }
 
